@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 //SLN: Do *not* modify this file. This is where Google Test
-//"hooks" into your unit tests. See GLViewKD-Trees_test.cpp
+//"hooks" into your unit tests. See GLViewKD_Trees_test.cpp
 //as an example of where to place your tests.
 
 int main(int argc, char* argv[] )

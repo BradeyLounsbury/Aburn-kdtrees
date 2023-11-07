@@ -12,7 +12,7 @@
 using namespace Aftr;
 namespace
 {
-   TEST( GLViewKD-Trees, simple_test )
+   TEST( GLViewKD_Trees, simple_test )
    {
       std::ofstream fout;
       fout.open( "./GLViewDefenseDaemon_simple_test.txt" );

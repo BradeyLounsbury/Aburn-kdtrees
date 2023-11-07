@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "GLViewKD-Trees.h" //GLView subclass instantiated to drive this simulation
+#include "GLViewKD_Trees.h" //GLView subclass instantiated to drive this simulation
 
 /**
    This creates a GLView subclass instance and begins the GLView's main loop.
@@ -22,7 +22,7 @@ int main( int argc, char* argv[] )
 
    do
    {
-      std::unique_ptr< Aftr::GLViewKD-Trees > glView( Aftr::GLViewKD-Trees::New( args ) );
+      std::unique_ptr< Aftr::GLViewKD_Trees > glView( Aftr::GLViewKD_Trees::New( args ) );
       simStatus = glView->startWorldSimulationLoop(); // Runs until simulation exits or requests a restart (values 0 or -1, respectively)
    }
    while( simStatus != 0 );

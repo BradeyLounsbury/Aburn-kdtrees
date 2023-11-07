@@ -7,7 +7,7 @@ namespace Aftr
    class Camera;
 
 /**
-   \class GLViewKD-Trees
+   \class GLViewKD_Trees
    \author Scott Nykl 
    \brief A child of an abstract GLView. This class is the top-most manager of the module.
 
@@ -18,14 +18,14 @@ namespace Aftr
     \{
 */
 
-class GLViewKD-Trees : public GLView
+class GLViewKD_Trees : public GLView
 {
 public:
-   static GLViewKD-Trees* New( const std::vector< std::string >& outArgs );
-   virtual ~GLViewKD-Trees();
+   static GLViewKD_Trees* New( const std::vector< std::string >& outArgs );
+   virtual ~GLViewKD_Trees();
    virtual void updateWorld(); ///< Called once per frame
    virtual void loadMap(); ///< Called once at startup to build this module's scene
-   virtual void createKD-TreesWayPoints();
+   virtual void createKD_TreesWayPoints();
    virtual void onResizeWindow( GLsizei width, GLsizei height );
    virtual void onMouseDown( const SDL_MouseButtonEvent& e );
    virtual void onMouseUp( const SDL_MouseButtonEvent& e );
@@ -34,7 +34,7 @@ public:
    virtual void onKeyUp( const SDL_KeyboardEvent& key );
 
 protected:
-   GLViewKD-Trees( const std::vector< std::string >& args );
+   GLViewKD_Trees( const std::vector< std::string >& args );
    virtual void onCreate();   
 };
 

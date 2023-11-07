@@ -1,4 +1,4 @@
-#include "GLViewKD-Trees.h"
+#include "GLViewKD_Trees.h"
 
 #include "WorldList.h" //This is where we place all of our WOs
 #include "ManagerOpenGLState.h" //We can change OpenGL State attributes with this
@@ -36,20 +36,20 @@
 
 using namespace Aftr;
 
-GLViewKD-Trees* GLViewKD-Trees::New( const std::vector< std::string >& args )
+GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
-   GLViewKD-Trees* glv = new GLViewKD-Trees( args );
+   GLViewKD_Trees* glv = new GLViewKD_Trees( args );
    glv->init( Aftr::GRAVITY, Vector( 0, 0, -1.0f ), "aftr.conf", PHYSICS_ENGINE_TYPE::petODE );
    glv->onCreate();
    return glv;
 }
 
 
-GLViewKD-Trees::GLViewKD-Trees( const std::vector< std::string >& args ) : GLView( args )
+GLViewKD_Trees::GLViewKD_Trees( const std::vector< std::string >& args ) : GLView( args )
 {
    //Initialize any member variables that need to be used inside of LoadMap() here.
    //Note: At this point, the Managers are not yet initialized. The Engine initialization
-   //occurs immediately after this method returns (see GLViewKD-Trees::New() for
+   //occurs immediately after this method returns (see GLViewKD_Trees::New() for
    //reference). Then the engine invoke's GLView::loadMap() for this module.
    //After loadMap() returns, GLView::onCreate is finally invoked.
 
@@ -59,13 +59,13 @@ GLViewKD-Trees::GLViewKD-Trees( const std::vector< std::string >& args ) : GLVie
    //       calls GLView::loadMap() (as well as initializing the engine's Managers)
    //    calls GLView::onCreate()
 
-   //GLViewKD-Trees::onCreate() is invoked after this module's LoadMap() is completed.
+   //GLViewKD_Trees::onCreate() is invoked after this module's LoadMap() is completed.
 }
 
 
-void GLViewKD-Trees::onCreate()
+void GLViewKD_Trees::onCreate()
 {
-   //GLViewKD-Trees::onCreate() is invoked after this module's LoadMap() is completed.
+   //GLViewKD_Trees::onCreate() is invoked after this module's LoadMap() is completed.
    //At this point, all the managers are initialized. That is, the engine is fully initialized.
 
    if( this->pe != NULL )
@@ -80,13 +80,13 @@ void GLViewKD-Trees::onCreate()
 }
 
 
-GLViewKD-Trees::~GLViewKD-Trees()
+GLViewKD_Trees::~GLViewKD_Trees()
 {
    //Implicitly calls GLView::~GLView()
 }
 
 
-void GLViewKD-Trees::updateWorld()
+void GLViewKD_Trees::updateWorld()
 {
    GLView::updateWorld(); //Just call the parent's update world first.
                           //If you want to add additional functionality, do it after
@@ -94,31 +94,31 @@ void GLViewKD-Trees::updateWorld()
 }
 
 
-void GLViewKD-Trees::onResizeWindow( GLsizei width, GLsizei height )
+void GLViewKD_Trees::onResizeWindow( GLsizei width, GLsizei height )
 {
    GLView::onResizeWindow( width, height ); //call parent's resize method.
 }
 
 
-void GLViewKD-Trees::onMouseDown( const SDL_MouseButtonEvent& e )
+void GLViewKD_Trees::onMouseDown( const SDL_MouseButtonEvent& e )
 {
    GLView::onMouseDown( e );
 }
 
 
-void GLViewKD-Trees::onMouseUp( const SDL_MouseButtonEvent& e )
+void GLViewKD_Trees::onMouseUp( const SDL_MouseButtonEvent& e )
 {
    GLView::onMouseUp( e );
 }
 
 
-void GLViewKD-Trees::onMouseMove( const SDL_MouseMotionEvent& e )
+void GLViewKD_Trees::onMouseMove( const SDL_MouseMotionEvent& e )
 {
    GLView::onMouseMove( e );
 }
 
 
-void GLViewKD-Trees::onKeyDown( const SDL_KeyboardEvent& key )
+void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 {
    GLView::onKeyDown( key );
    if( key.keysym.sym == SDLK_0 )
@@ -131,13 +131,13 @@ void GLViewKD-Trees::onKeyDown( const SDL_KeyboardEvent& key )
 }
 
 
-void GLViewKD-Trees::onKeyUp( const SDL_KeyboardEvent& key )
+void GLViewKD_Trees::onKeyUp( const SDL_KeyboardEvent& key )
 {
    GLView::onKeyUp( key );
 }
 
 
-void Aftr::GLViewKD-Trees::loadMap()
+void Aftr::GLViewKD_Trees::loadMap()
 {
    this->worldLst = new WorldList(); //WorldList is a 'smart' vector that is used to store WO*'s
    this->actorLst = new WorldList();
@@ -326,11 +326,11 @@ void Aftr::GLViewKD-Trees::loadMap()
       } );
    this->worldLst->push_back( gui );
 
-   createKD-TreesWayPoints();
+   createKD_TreesWayPoints();
 }
 
 
-void GLViewKD-Trees::createKD-TreesWayPoints()
+void GLViewKD_Trees::createKD_TreesWayPoints()
 {
    // Create a waypoint with a radius of 3, a frequency of 5 seconds, activated by GLView's camera, and is visible.
    WayPointParametersBase params(this);
