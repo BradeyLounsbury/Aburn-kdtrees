@@ -85,12 +85,25 @@ GLViewKD_Trees::~GLViewKD_Trees()
    //Implicitly calls GLView::~GLView()
 }
 
-
+static bool move_forward, move_left, move_right, move_backward = false;
 void GLViewKD_Trees::updateWorld()
 {
    GLView::updateWorld(); //Just call the parent's update world first.
                           //If you want to add additional functionality, do it after
                           //this call.
+
+   if (move_forward) {
+       this->cam->moveInLookDirection();
+   }
+   if (move_left) {
+       this->cam->moveLeft();
+   }
+   if (move_right) {
+       this->cam->moveRight();
+   }
+   if (move_backward) {
+       this->cam->moveOppositeLookDirection();
+   }
 }
 
 
@@ -124,6 +137,23 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    if( key.keysym.sym == SDLK_0 )
       this->setNumPhysicsStepsPerRender( 1 );
 
+   if (key.keysym.sym == SDLK_w)
+   {
+       move_forward = true;
+   }
+   if (key.keysym.sym == SDLK_a)
+   {
+       move_left = true;
+   }
+   if (key.keysym.sym == SDLK_s)
+   {
+       move_backward = true;
+   }
+   if (key.keysym.sym == SDLK_d)
+   {
+       move_right = true;
+   }
+
    if( key.keysym.sym == SDLK_1 )
    {
 
@@ -134,6 +164,23 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 void GLViewKD_Trees::onKeyUp( const SDL_KeyboardEvent& key )
 {
    GLView::onKeyUp( key );
+
+   if (key.keysym.sym == SDLK_w)
+   {
+       move_forward = false;
+   }
+   if (key.keysym.sym == SDLK_a)
+   {
+       move_left = false;
+   }
+   if (key.keysym.sym == SDLK_s)
+   {
+       move_backward = false;
+   }
+   if (key.keysym.sym == SDLK_d)
+   {
+       move_right = false;
+   }
 }
 
 
@@ -315,18 +362,18 @@ void Aftr::GLViewKD_Trees::loadMap()
    //Make a Dear Im Gui instance via the WOImGui in the engine... This calls
    //the default Dear ImGui demo that shows all the features... To create your own,
    //inherit from WOImGui and override WOImGui::drawImGui_for_this_frame(...) (among any others you need).
-   WOImGui* gui = WOImGui::New( nullptr );
-   gui->setLabel( "My Gui" );
-   gui->subscribe_drawImGuiWidget(
-      [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
-      {
-         ImGui::ShowDemoWindow(); //Displays the default ImGui demo from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
-         WOImGui::draw_AftrImGui_Demo( gui ); //Displays a small Aftr Demo from C:/repos/aburn/engine/src/aftr/WOImGui.cpp
-         ImPlot::ShowDemoWindow(); //Displays the ImPlot demo using ImGui from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
-      } );
-   this->worldLst->push_back( gui );
+   //WOImGui* gui = WOImGui::New( nullptr );
+   //gui->setLabel( "My Gui" );
+   //gui->subscribe_drawImGuiWidget(
+   //   [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
+   //   {
+   //      ImGui::ShowDemoWindow(); //Displays the default ImGui demo from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
+   //      WOImGui::draw_AftrImGui_Demo( gui ); //Displays a small Aftr Demo from C:/repos/aburn/engine/src/aftr/WOImGui.cpp
+   //      ImPlot::ShowDemoWindow(); //Displays the ImPlot demo using ImGui from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
+   //   } );
+   //this->worldLst->push_back( gui );
 
-   createKD_TreesWayPoints();
+   //createKD_TreesWayPoints();
 }
 
 
