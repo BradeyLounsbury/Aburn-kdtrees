@@ -33,8 +33,13 @@
 #include "WOImGui.h" //GUI Demos also need to #include "AftrImGuiIncludes.h"
 #include "AftrImGuiIncludes.h"
 #include "AftrGLRendererBase.h"
+#include "MGLPointCloud.h"
+#include "MGLIndexedGeometry.h"
+#include "IndexedGeometryLines.h"
 
 using namespace Aftr;
+
+static unsigned int cube_id = 0;
 
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
@@ -156,7 +161,14 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if( key.keysym.sym == SDLK_1 )
    {
+       this->worldLst->getWOByID(cube_id)->isVisible = true;
+       this->worldLst->getWOByID(cube_id)->getModel()->renderBBox = true;
+   }
 
+   if (key.keysym.sym == SDLK_2)
+   {
+       this->worldLst->getWOByID(cube_id)->isVisible = true;
+       this->worldLst->getWOByID(cube_id)->getModel()->renderBBox = false;
    }
 }
 
@@ -193,7 +205,7 @@ void Aftr::GLViewKD_Trees::loadMap()
    ManagerOpenGLState::GL_CLIPPING_PLANE = 1000.0;
    ManagerOpenGLState::GL_NEAR_PLANE = 0.1f;
    ManagerOpenGLState::enableFrustumCulling = false;
-   Axes::isVisible = true;
+   Axes::isVisible = false;
    this->glRenderer->isUsingShadowMapping( false ); //set to TRUE to enable shadow mapping, must be using GL 3.2+
 
    this->cam->setPosition( 15,15,10 );
@@ -270,6 +282,62 @@ void Aftr::GLViewKD_Trees::loadMap()
          } );
       wo->setLabel( "Grass" );
       worldLst->push_back( wo );
+   }
+
+   {
+       WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
+       wo->setPosition(Vector(10, 0, 5));
+       wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
+       wo->upon_async_model_loaded([wo]()
+           {
+               ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
+               cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
+               cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
+               cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
+               cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
+           });
+       wo->setLabel("cube rendered");
+       worldLst->push_back(wo);
+   }
+   
+   {
+       WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
+       wo->setPosition(Vector(0, 0, 5));
+       wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
+       wo->upon_async_model_loaded([wo]()
+           {
+               ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
+               cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
+               cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
+               cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
+               cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
+           });
+       wo->setLabel("cube bbox");
+       cube_id = wo->getID();
+       worldLst->push_back(wo);
+   }
+
+   {
+       /*WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
+       wo->setPosition(Vector(-10, 0, 5));
+       MGLPointCloud* pc = MGLPointCloud::New(wo, &this->cam, false, false, false);*/
+       
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       lines.push_back(Vector(0, 0, 10));
+       lines.push_back(Vector(100, 0, 10));
+       lines.push_back(Vector(0, 0, 10));
+       lines.push_back(Vector(0, 100, 10));
+       std::vector<aftrColor4ub> colors;
+       colors.push_back(aftrColor4ub(255, 0, 0, 0));
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       mgl->setIndexedGeometry(geom);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometrySphere");
+       wo->setPosition(Vector(5.0f, 5.0f, 10.0f));
+       wo->renderOrderType = RENDER_ORDER_TYPE::roTRANSPARENT;
+       this->worldLst->push_back(wo);
    }
 
    //{
