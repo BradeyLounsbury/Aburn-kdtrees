@@ -40,6 +40,7 @@
 #include "IndexedGeometryPointCloud.h"
 #include "GLSLShaderPointTesselatorBillboard.h"
 #include "WOPointCloud.h"
+#include "quicksort.h"
 
 using namespace Aftr;
 
@@ -194,11 +195,11 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    if (key.keysym.sym == SDLK_4)
    {
        std::vector< Vector > v;
-       for (int i = 0; i < 35; i++)
+       for (int i = 0; i < pt_cloud->getNumPoints(); i++)
        {
            Vector r;
            for (int j = 0; j < 3; j++)
-               r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
+               r[j] = ManagerRandomNumber::getRandomFloat(-5, 5);
            v.push_back(r);
        }
 
@@ -212,8 +213,8 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            c.push_back(aftrColor4ub(r));
        }
 
-       pt_cloud->setColors(c);
        pt_cloud->setPoints(v);
+       pt_cloud->setColors(c);
    }
 
    if (key.keysym.sym == SDLK_x) 
@@ -305,6 +306,36 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        wo->setLabel("IndexedGeometryPlane");
        auto pos = pt_cloud->getPosition();
        pos.z -= z_2;
+       wo->setPosition(pos);
+       this->worldLst->push_back(wo);
+   }
+
+   if (key.keysym.sym == SDLK_5) {
+       std::vector<Vector> verts = pt_cloud->getPoints();
+       quickSort(verts, 0, verts.size()-1, 0);
+       auto &x_2 = verts[(verts.size() - 1) / 2].x;
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       auto max = pt_cloud->getModel()->getBoundingBox().getMax();
+       auto min = pt_cloud->getModel()->getBoundingBox().getMin();
+       lines.push_back(Vector(x_2, min.y, min.z)); lines.push_back(Vector(x_2, max.y, min.z));
+       lines.push_back(Vector(x_2, min.y, min.z)); lines.push_back(Vector(x_2, min.y, max.z));
+       lines.push_back(Vector(x_2, max.y, max.z)); lines.push_back(Vector(x_2, max.y, min.z));
+       lines.push_back(Vector(x_2, max.y, max.z)); lines.push_back(Vector(x_2, min.y, max.z));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { b,b,b,b,b,b,b,b };
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
+       mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometryPlane");
+       auto pos = pt_cloud->getPosition();
+       pos.x -= x_2;
        wo->setPosition(pos);
        this->worldLst->push_back(wo);
    }
@@ -484,7 +515,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        wo->setModel(mgl);
        wo->setLabel("IndexedGeometryCube");
        wo->setPosition(Vector(0,10,10));
-       this->worldLst->push_back(wo);
+       //this->worldLst->push_back(wo);
    }
 
    //plane wireframe
@@ -508,7 +539,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        wo->setModel(mgl);
        wo->setLabel("IndexedGeometryPlane");
        wo->setPosition(Vector(0, 15, 10));
-       this->worldLst->push_back(wo);
+       //this->worldLst->push_back(wo);
    }
 
    // mgl point cloud
@@ -558,11 +589,11 @@ void Aftr::GLViewKD_Trees::loadMap()
    {
        std::vector< Vector > v;
 
-       for (int i = 0; i < 25; i++)
+       for (int i = 0; i < 500; i++)
        {
            Vector r;
            for (int j = 0; j < 3; j++)
-               r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
+               r[j] = ManagerRandomNumber::getRandomFloat(-5, 5);
            v.push_back(r);
        }
 
@@ -579,9 +610,10 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud = WOPointCloud::New(this->getCameraPtrPtr(), true, false, false);
        pt_cloud->setPoints(v);
        pt_cloud->setColors(c);
-       pt_cloud->setPosition(0, 0, 10);
+       pt_cloud->setPosition(0, 0, 5);
        pt_cloud->setLabel("PointCloud");
        pt_cloud->getModel()->renderBBox = true;
+       pt_cloud->setSizeOfEachPoint(0.7, 0.7);
        pt_cloud_id = pt_cloud->getID();
        this->worldLst->push_back(pt_cloud);
    }
