@@ -213,8 +213,100 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        }
 
        pt_cloud->setColors(c);
-
        pt_cloud->setPoints(v);
+   }
+
+   if (key.keysym.sym == SDLK_x) 
+   {
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       auto max = pt_cloud->getModel()->getBoundingBox().getMax();
+       auto min = pt_cloud->getModel()->getBoundingBox().getMin();
+       auto x_2 = (max.x - min.x) / 2;
+       /*auto y = (max.y - min.y) / 2;
+       auto z = (max.z - min.z) / 2;*/
+       lines.push_back(Vector(x_2, min.y, min.z)); lines.push_back(Vector(x_2, max.y, min.z));
+       lines.push_back(Vector(x_2, min.y, min.z)); lines.push_back(Vector(x_2, min.y, max.z));
+       lines.push_back(Vector(x_2, max.y, max.z)); lines.push_back(Vector(x_2, max.y, min.z));
+       lines.push_back(Vector(x_2, max.y, max.z)); lines.push_back(Vector(x_2, min.y, max.z));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { b,b,b,b,b,b,b,b };
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
+       mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometryPlane");
+       auto pos = pt_cloud->getPosition();
+       pos.x -= x_2;
+       wo->setPosition(pos);
+       this->worldLst->push_back(wo);
+   }
+
+   if (key.keysym.sym == SDLK_y)
+   {
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       auto max = pt_cloud->getModel()->getBoundingBox().getMax();
+       auto min = pt_cloud->getModel()->getBoundingBox().getMin();
+       //auto x_2 = (max.x - min.x) / 2;
+       auto y_2 = (max.y - min.y) / 2;
+       //auto z_2 = (max.z - min.z) / 2;
+       lines.push_back(Vector(min.x, y_2, min.z)); lines.push_back(Vector(max.x, y_2, min.z));
+       lines.push_back(Vector(min.x, y_2, min.z)); lines.push_back(Vector(min.x, y_2, max.z));
+       lines.push_back(Vector(max.x, y_2, max.z)); lines.push_back(Vector(max.x, y_2, min.z));
+       lines.push_back(Vector(max.x, y_2, max.z)); lines.push_back(Vector(min.x, y_2, max.z));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { r,r,r,r,r,r,r,r };
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
+       mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometryPlane");
+       auto pos = pt_cloud->getPosition();
+       pos.y -= y_2;
+       wo->setPosition(pos);
+       this->worldLst->push_back(wo);
+   }
+
+   if (key.keysym.sym == SDLK_z)
+   {
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       auto max = pt_cloud->getModel()->getBoundingBox().getMax();
+       auto min = pt_cloud->getModel()->getBoundingBox().getMin();
+       //auto x_2 = (max.x - min.x) / 2;
+       //auto y = (max.y - min.y) / 2;
+       auto z_2 = (max.z - min.z) / 2;
+       lines.push_back(Vector(min.x, min.y, z_2)); lines.push_back(Vector(max.x, min.y, z_2));
+       lines.push_back(Vector(min.x, min.y, z_2)); lines.push_back(Vector(min.x, max.y, z_2));
+       lines.push_back(Vector(max.x, max.y, z_2)); lines.push_back(Vector(max.x, min.y, z_2));
+       lines.push_back(Vector(max.x, max.y, z_2)); lines.push_back(Vector(min.x, max.y, z_2));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { g,g,g,g,g,g,g,g };
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
+       mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometryPlane");
+       auto pos = pt_cloud->getPosition();
+       pos.z -= z_2;
+       wo->setPosition(pos);
+       this->worldLst->push_back(wo);
    }
 }
 
@@ -487,10 +579,6 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud = WOPointCloud::New(this->getCameraPtrPtr(), true, false, false);
        pt_cloud->setPoints(v);
        pt_cloud->setColors(c);
-       //MGLPointCloud* mgl = MGLPointCloud::New( this->pc, this->getCameraPtrPtr(), true, false, false );
-       //pc->setModel( mgl );
-       //mgl->setPoints( v );
-       //mgl->setColors( c );
        pt_cloud->setPosition(0, 0, 10);
        pt_cloud->setLabel("PointCloud");
        pt_cloud->getModel()->renderBBox = true;
