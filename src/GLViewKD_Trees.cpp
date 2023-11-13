@@ -36,10 +36,15 @@
 #include "MGLPointCloud.h"
 #include "MGLIndexedGeometry.h"
 #include "IndexedGeometryLines.h"
+#include "GLSLShaderDefaultIndexedGeometryLinesGL32.h"
+#include "IndexedGeometryPointCloud.h"
+#include "GLSLShaderPointTesselatorBillboard.h"
+#include "WOPointCloud.h"
 
 using namespace Aftr;
 
-static unsigned int cube_id = 0;
+static unsigned int cube_id, pt_cloud_id = 0;
+WOPointCloud* pt_cloud;
 
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
@@ -170,6 +175,47 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        this->worldLst->getWOByID(cube_id)->isVisible = true;
        this->worldLst->getWOByID(cube_id)->getModel()->renderBBox = false;
    }
+
+   if (key.keysym.sym == SDLK_3)
+   {       
+       std::vector<aftrColor4ub> c;
+       for (int i = 0; i < pt_cloud->getNumPoints(); i++) {
+           float r[4];
+           for (int j = 0; j < 3; j++)
+               r[j] = ManagerRandomNumber::getRandomFloat(0, 255);
+           r[3] = 255.0f;
+
+           c.push_back(aftrColor4ub(r));
+       }
+
+       pt_cloud->setColors(c);
+   }
+
+   if (key.keysym.sym == SDLK_4)
+   {
+       std::vector< Vector > v;
+       for (int i = 0; i < 35; i++)
+       {
+           Vector r;
+           for (int j = 0; j < 3; j++)
+               r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
+           v.push_back(r);
+       }
+
+       std::vector<aftrColor4ub> c;
+       for (int i = 0; i < pt_cloud->getNumPoints(); i++) {
+           float r[4];
+           for (int j = 0; j < 3; j++)
+               r[j] = ManagerRandomNumber::getRandomFloat(0, 255);
+           r[3] = 255.0f;
+
+           c.push_back(aftrColor4ub(r));
+       }
+
+       pt_cloud->setColors(c);
+
+       pt_cloud->setPoints(v);
+   }
 }
 
 
@@ -284,60 +330,172 @@ void Aftr::GLViewKD_Trees::loadMap()
       worldLst->push_back( wo );
    }
 
-   {
-       WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
-       wo->setPosition(Vector(10, 0, 5));
-       wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
-       wo->upon_async_model_loaded([wo]()
-           {
-               ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
-               cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
-               cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
-               cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
-               cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
-           });
-       wo->setLabel("cube rendered");
-       worldLst->push_back(wo);
-   }
+   //{
+   //    WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
+   //    wo->setPosition(Vector(10, 0, 5));
+   //    wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
+   //    wo->upon_async_model_loaded([wo]()
+   //        {
+   //            ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
+   //            cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
+   //            cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
+   //            cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
+   //            cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
+   //        });
+   //    wo->setLabel("cube rendered");
+   //    worldLst->push_back(wo);
+   //}
    
-   {
-       WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
-       wo->setPosition(Vector(0, 0, 5));
-       wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
-       wo->upon_async_model_loaded([wo]()
-           {
-               ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
-               cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
-               cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
-               cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
-               cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
-           });
-       wo->setLabel("cube bbox");
-       cube_id = wo->getID();
-       worldLst->push_back(wo);
-   }
+   //{
+   //    WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
+   //    wo->setPosition(Vector(0, 0, 5));
+   //    wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
+   //    wo->upon_async_model_loaded([wo]()
+   //        {
+   //            ModelMeshSkin& cubeSkin = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
+   //            cubeSkin.setAmbient(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Color of object when it is not in any light
+   //            cubeSkin.setDiffuse(aftrColor4f(1.0f, 1.0f, 1.0f, 1.0f)); //Diffuse color components (ie, matte shading color of this object)
+   //            cubeSkin.setSpecular(aftrColor4f(0.4f, 0.4f, 0.4f, 1.0f)); //Specular color component (ie, how "shiney" it is)
+   //            cubeSkin.setSpecularCoefficient(10); // How "sharp" are the specular highlights (bigger is sharper, 1000 is very sharp, 10 is very dull)
+   //        });
+   //    wo->setLabel("cube bbox");
+   //    cube_id = wo->getID();
+   //    worldLst->push_back(wo);
+   //}
 
-   {
-       /*WO* wo = WO::New(shinyRedPlasticCube, Vector(1, 1, 1), MESH_SHADING_TYPE::mstFLAT);
-       wo->setPosition(Vector(-10, 0, 5));
-       MGLPointCloud* pc = MGLPointCloud::New(wo, &this->cam, false, false, false);*/
-       
+   //cube wireframe
+   {       
        WO* wo = WO::New();
        MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
        std::vector<Vector> lines;
-       lines.push_back(Vector(0, 0, 10));
-       lines.push_back(Vector(100, 0, 10));
-       lines.push_back(Vector(0, 0, 10));
-       lines.push_back(Vector(0, 100, 10));
-       std::vector<aftrColor4ub> colors;
-       colors.push_back(aftrColor4ub(255, 0, 0, 0));
+       lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(1, 0, 0));
+       lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(0, 1, 0));
+       lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(0, 0, 1));
+       lines.push_back(Vector(0, 0, 1)); lines.push_back(Vector(1, 0, 1));
+       lines.push_back(Vector(0, 0, 1)); lines.push_back(Vector(0, 1, 1));
+       lines.push_back(Vector(0, 1, 0)); lines.push_back(Vector(0, 1, 1));
+       lines.push_back(Vector(0, 1, 0)); lines.push_back(Vector(1, 1, 0));
+       lines.push_back(Vector(1, 0, 0)); lines.push_back(Vector(1, 0, 1));
+       lines.push_back(Vector(1, 0, 0)); lines.push_back(Vector(1, 1, 0));
+       lines.push_back(Vector(1, 1, 1)); lines.push_back(Vector(1, 0, 1));
+       lines.push_back(Vector(1, 1, 1)); lines.push_back(Vector(0, 1, 1));
+       lines.push_back(Vector(1, 1, 1)); lines.push_back(Vector(1, 1, 0));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r };
        IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
        mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
        wo->setModel(mgl);
-       wo->setLabel("IndexedGeometrySphere");
-       wo->setPosition(Vector(5.0f, 5.0f, 10.0f));
-       wo->renderOrderType = RENDER_ORDER_TYPE::roTRANSPARENT;
+       wo->setLabel("IndexedGeometryCube");
+       wo->setPosition(Vector(0,10,10));
        this->worldLst->push_back(wo);
+   }
+
+   //plane wireframe
+   {
+       WO* wo = WO::New();
+       MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       std::vector<Vector> lines;
+       lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(1, 0, 0));
+       lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(0, 1, 0));
+       lines.push_back(Vector(1, 1, 0)); lines.push_back(Vector(1, 0, 0));
+       lines.push_back(Vector(1, 1, 0)); lines.push_back(Vector(0, 1, 0));
+       aftrColor4ub r = aftrColor4ub{ 255,0,0,255 };
+       aftrColor4ub g = aftrColor4ub{ 0,255,0,255 };
+       aftrColor4ub b = aftrColor4ub{ 0,0,255,255 };
+       std::vector< aftrColor4ub > colors = { b,b,b,b,b,b,b,b };
+       IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
+       geom->setLineWidthInPixels(1.5);
+       mgl->setIndexedGeometry(geom);
+       GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
+       mgl->getSkin().setShader(shdr);
+       wo->setModel(mgl);
+       wo->setLabel("IndexedGeometryPlane");
+       wo->setPosition(Vector(0, 15, 10));
+       this->worldLst->push_back(wo);
+   }
+
+   // mgl point cloud
+   {
+       //std::vector< Vector > v = { Vector{1,0,0}, Vector{1,1,0}, Vector{ 0,1,0}, Vector{ 0,0,0},
+       //                        Vector{1,0,1}, Vector{1,1,1}, Vector{ 0,1,1}, Vector{ 0,0,1},
+       //                        Vector{1,0,2}, Vector{1,1,2}, Vector{ 0,1,2}, Vector{ 0,0,2} };
+
+       //for (int i = 0; i < 5; i++)
+       //{
+       //    Vector r;
+       //    for (int j = 0; j < 3; j++)
+       //        r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
+       //    v.push_back(r);
+       //}
+
+       //for (auto& x : v)
+       //    x += {3, 0, 0};
+
+       //std::vector< unsigned int > idx;
+       //for (int i = 0; i < v.size(); i++)
+       //    idx.push_back(i);
+
+       //WO* wo = WO::New();
+       //wo->upon_async_model_loaded([wo, v, this]()
+       //    {
+       //        MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       //        IndexedGeometryPointCloud* points = IndexedGeometryPointCloud::New(v);
+       //        mgl->setIndexedGeometry(points);
+       //        float pointSizeInMetersXY = 1.0f;
+       //        GLSLShaderPointTesselatorBillboard* shdr = GLSLShaderPointTesselatorBillboard::New(this->getCameraPtrPtr());
+       //        mgl->getSkin().setShader(shdr);
+       //        static_cast<GLSLShaderPointTesselatorBillboard*>(mgl->getSkin().getShader())->setDimXY(pointSizeInMetersXY, pointSizeInMetersXY);
+       //        Tex tex = *ManagerTex::loadTexAsync(ManagerEnvironmentConfiguration::getSMM() + "/images/particle.bmp");
+       //        //Tex tex = *ManagerTex::loadTexAsync( shared + "/images/circle.bmp" );
+       //        if (mgl->getSkin().getMultiTextureSet().size() == 0)
+       //            mgl->getSkin().getMultiTextureSet().push_back(tex);
+       //        else
+       //            mgl->getSkin().getMultiTextureSet().at(0) = (tex);
+       //        wo->setModel(mgl);
+       //    });
+       //wo->setPosition(Vector(0, 0, 10));
+       //this->worldLst->push_back(wo);
+   }
+
+   // wo point cloud
+   {
+       std::vector< Vector > v;
+
+       for (int i = 0; i < 25; i++)
+       {
+           Vector r;
+           for (int j = 0; j < 3; j++)
+               r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
+           v.push_back(r);
+       }
+
+       std::vector<aftrColor4ub> c;
+       for (int i = 0; i < v.size(); i++) {
+           float r[4];
+           for (int j = 0; j < 3; j++)
+               r[j] = ManagerRandomNumber::getRandomFloat(0, 255);
+           r[3] = 255.0f;
+
+           c.push_back(aftrColor4ub(r));
+       }
+
+       pt_cloud = WOPointCloud::New(this->getCameraPtrPtr(), true, false, false);
+       pt_cloud->setPoints(v);
+       pt_cloud->setColors(c);
+       //MGLPointCloud* mgl = MGLPointCloud::New( this->pc, this->getCameraPtrPtr(), true, false, false );
+       //pc->setModel( mgl );
+       //mgl->setPoints( v );
+       //mgl->setColors( c );
+       pt_cloud->setPosition(0, 0, 10);
+       pt_cloud->setLabel("PointCloud");
+       pt_cloud->getModel()->renderBBox = true;
+       pt_cloud_id = pt_cloud->getID();
+       this->worldLst->push_back(pt_cloud);
    }
 
    //{
