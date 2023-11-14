@@ -339,7 +339,6 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setModel(mgl);
            wo->setLabel("IndexedGeometryPlane");
            auto pos = pt_cloud->getPosition();
-           pos.x -= x_2;
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
@@ -376,8 +375,6 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setModel(mgl);
            wo->setLabel("IndexedGeometryPlane");
            auto pos = pt_cloud->getPosition();
-           pos.x -= x_2;
-           pos.y -= y_2;
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
@@ -385,12 +382,12 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->left));
        }
 
-       /*y_2 = v2[(v2.size() - 1) / 2].y;
+       y_2 = v2[(v2.size() - 1) / 2].y;
        {
            WO* wo = WO::New();
            MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
            std::vector<Vector> lines;
-           auto min = Vector(x_2, pt_cloud->getModel()->getBoundingBox().getMax().y, pt_cloud->getModel()->getBoundingBox().getMax().z);
+           auto min = Vector(x_2, pt_cloud->getModel()->getBoundingBox().getMin().y, pt_cloud->getModel()->getBoundingBox().getMin().z);
            auto max = pt_cloud->getModel()->getBoundingBox().getMax();
            lines.push_back(Vector(min.x, y_2, min.z)); lines.push_back(Vector(max.x, y_2, min.z));
            lines.push_back(Vector(min.x, y_2, min.z)); lines.push_back(Vector(min.x, y_2, max.z));
@@ -408,13 +405,12 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setModel(mgl);
            wo->setLabel("IndexedGeometryPlane");
            auto pos = pt_cloud->getPosition();
-           pos.y -= y_2;
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
-           add_left(root, v2, wo);
+           add_right(root, v2, wo);
            PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->right));
-       }*/
+       }
    }
 }
 
@@ -689,7 +685,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud->setColors(c);
        pt_cloud->setPosition(0, 0, 5);
        pt_cloud->setLabel("PointCloud");
-       pt_cloud->getModel()->renderBBox = true;
+       pt_cloud->getModel()->renderBBox = false;
        pt_cloud->setSizeOfEachPoint(0.7, 0.7);
        pt_cloud_id = pt_cloud->getID();
        this->worldLst->push_back(pt_cloud);
