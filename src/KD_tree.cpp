@@ -1,6 +1,6 @@
 #include "KD_tree.h"
 
-KD_Node* init_tree(std::vector<Aftr::Vector> verts, Aftr::WO* wo) {
+KD_Node* init_node(std::vector<Aftr::Vector> verts, Aftr::WO* wo) {
 	KD_Node node;
 	node.parent = nullptr;
 	node.left = nullptr;

@@ -10,4 +10,4 @@
 
 using namespace Aftr;
 
-void generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*> &PlaneMap, int iteration);
+KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*> &PlaneMap, int iteration);

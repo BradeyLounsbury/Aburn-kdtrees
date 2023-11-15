@@ -10,6 +10,6 @@ struct KD_Node {
     Aftr::WO* plane;
 };
 
-KD_Node* init_tree(std::vector<Aftr::Vector> verts, Aftr::WO* wo);
+KD_Node* init_node(std::vector<Aftr::Vector> verts, Aftr::WO* wo);
 void add_left(KD_Node* root, std::vector<Aftr::Vector> verts, Aftr::WO* wo);
 void add_right(KD_Node* root, std::vector<Aftr::Vector> verts, Aftr::WO* wo);

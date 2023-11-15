@@ -46,7 +46,9 @@
 
 using namespace Aftr;
 
-static unsigned int cube_id, pt_cloud_id, griff_id = 0;
+unsigned int cube_id;
+unsigned int pt_cloud_id;
+unsigned int griff_id;
 WOPointCloud* pt_cloud;
 std::map<WO*, KD_Node*> PlaneMap;
 
@@ -424,7 +426,14 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        WO* wo = this->worldLst->getWOByID(griff_id);
        auto bb = wo->getModel()->getBoundingBox();
        auto verts = wo->getModel()->getCompositeVertexList();
-       generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), PlaneMap, 6);
+       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), PlaneMap, 6);
+   }
+
+   if (key.keysym.sym == SDLK_8)
+   {
+       for (auto p : PlaneMap) {
+           this->worldLst->eraseViaWOptr(p.first);
+       }
    }
 }
 
