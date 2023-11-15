@@ -46,7 +46,7 @@
 
 using namespace Aftr;
 
-static unsigned int cube_id, pt_cloud_id = 0;
+static unsigned int cube_id, pt_cloud_id, griff_id = 0;
 WOPointCloud* pt_cloud;
 std::map<WO*, KD_Node*> PlaneMap;
 
@@ -418,6 +418,14 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    {
        generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), PlaneMap, 6);
    }
+
+   if (key.keysym.sym == SDLK_7)
+   {
+       WO* wo = this->worldLst->getWOByID(griff_id);
+       auto bb = wo->getModel()->getBoundingBox();
+       auto verts = wo->getModel()->getCompositeVertexList();
+       generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), PlaneMap, 6);
+   }
 }
 
 
@@ -621,49 +629,6 @@ void Aftr::GLViewKD_Trees::loadMap()
        //this->worldLst->push_back(wo);
    }
 
-   // mgl point cloud
-   {
-       //std::vector< Vector > v = { Vector{1,0,0}, Vector{1,1,0}, Vector{ 0,1,0}, Vector{ 0,0,0},
-       //                        Vector{1,0,1}, Vector{1,1,1}, Vector{ 0,1,1}, Vector{ 0,0,1},
-       //                        Vector{1,0,2}, Vector{1,1,2}, Vector{ 0,1,2}, Vector{ 0,0,2} };
-
-       //for (int i = 0; i < 5; i++)
-       //{
-       //    Vector r;
-       //    for (int j = 0; j < 3; j++)
-       //        r[j] = ManagerRandomNumber::getRandomFloat(-3, 3);
-       //    v.push_back(r);
-       //}
-
-       //for (auto& x : v)
-       //    x += {3, 0, 0};
-
-       //std::vector< unsigned int > idx;
-       //for (int i = 0; i < v.size(); i++)
-       //    idx.push_back(i);
-
-       //WO* wo = WO::New();
-       //wo->upon_async_model_loaded([wo, v, this]()
-       //    {
-       //        MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
-       //        IndexedGeometryPointCloud* points = IndexedGeometryPointCloud::New(v);
-       //        mgl->setIndexedGeometry(points);
-       //        float pointSizeInMetersXY = 1.0f;
-       //        GLSLShaderPointTesselatorBillboard* shdr = GLSLShaderPointTesselatorBillboard::New(this->getCameraPtrPtr());
-       //        mgl->getSkin().setShader(shdr);
-       //        static_cast<GLSLShaderPointTesselatorBillboard*>(mgl->getSkin().getShader())->setDimXY(pointSizeInMetersXY, pointSizeInMetersXY);
-       //        Tex tex = *ManagerTex::loadTexAsync(ManagerEnvironmentConfiguration::getSMM() + "/images/particle.bmp");
-       //        //Tex tex = *ManagerTex::loadTexAsync( shared + "/images/circle.bmp" );
-       //        if (mgl->getSkin().getMultiTextureSet().size() == 0)
-       //            mgl->getSkin().getMultiTextureSet().push_back(tex);
-       //        else
-       //            mgl->getSkin().getMultiTextureSet().at(0) = (tex);
-       //        wo->setModel(mgl);
-       //    });
-       //wo->setPosition(Vector(0, 0, 10));
-       //this->worldLst->push_back(wo);
-   }
-
    // wo point cloud
    {
        std::vector< Vector > v;
@@ -695,6 +660,17 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud->setSizeOfEachPoint(0.4, 0.4);
        pt_cloud_id = pt_cloud->getID();
        this->worldLst->push_back(pt_cloud);
+   }
+
+   // griff
+   {
+       std::string griff(ManagerEnvironmentConfiguration::getLMM() + "/models/griff/griff.obj");
+       WO* griffWO = WO::New(griff, Vector(0.07, 0.07, 0.07), MESH_SHADING_TYPE::mstFLAT);
+       griffWO->setPosition(10, 0, 6.5);
+       griffWO->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
+       griff_id = griffWO->getID();
+
+       this->worldLst->push_back(griffWO);
    }
 
    //{
