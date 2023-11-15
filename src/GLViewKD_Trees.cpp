@@ -210,8 +210,8 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        for (int i = 0; i < pt_cloud->getNumPoints(); i++) {
            float r[4];
            for (int j = 0; j < 3; j++)
-               r[j] = ManagerRandomNumber::getRandomFloat(0, 255);
-           r[3] = 255.0f;
+               r[j] = 236.0f;
+           r[3] = 0.0f;
 
            c.push_back(aftrColor4ub(r));
        }
@@ -416,7 +416,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_6)
    {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), PlaneMap, 21);
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), PlaneMap, 6);
    }
 }
 
@@ -692,7 +692,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud->setPosition(0, 0, 5);
        pt_cloud->setLabel("PointCloud");
        pt_cloud->getModel()->renderBBox = false;
-       pt_cloud->setSizeOfEachPoint(0.7, 0.7);
+       pt_cloud->setSizeOfEachPoint(0.4, 0.4);
        pt_cloud_id = pt_cloud->getID();
        this->worldLst->push_back(pt_cloud);
    }
