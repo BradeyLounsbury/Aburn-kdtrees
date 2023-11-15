@@ -1,3 +1,4 @@
+#pragma once
 #include "GLViewKD_Trees.h"
 
 struct KD_Node {

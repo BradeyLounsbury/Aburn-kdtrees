@@ -42,6 +42,7 @@
 #include "WOPointCloud.h"
 #include "quicksort.h"
 #include "KD_tree.h"
+#include "helpers.h"
 
 using namespace Aftr;
 
@@ -342,8 +343,8 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
-           root = init_tree(verts, wo);
-           PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root));
+           //root = init_tree(verts, wo);
+           //PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root));
        }
 
        std::vector<Vector> v1, v2;
@@ -378,8 +379,8 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
-           add_left(root, v1, wo);
-           PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->left));
+           //add_left(root, v1, wo);
+           //PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->left));
        }
 
        y_2 = v2[(v2.size() - 1) / 2].y;
@@ -408,9 +409,14 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
            wo->setPosition(pos);
            this->worldLst->push_back(wo);
 
-           add_right(root, v2, wo);
-           PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->right));
+           //add_right(root, v2, wo);
+           //PlaneMap.insert(std::pair<WO*, KD_Node*>(wo, root->right));
        }
+   }
+
+   if (key.keysym.sym == SDLK_6)
+   {
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), PlaneMap, 21);
    }
 }
 
