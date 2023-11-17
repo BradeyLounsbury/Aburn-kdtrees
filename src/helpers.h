@@ -1,5 +1,6 @@
 #include "GLViewKD_Trees.h"
 #include "WO.h"
+#include "WORay.h"
 #include "WorldList.h"
 #include "Model.h"
 #include "MGLIndexedGeometry.h"
@@ -10,4 +11,5 @@
 
 using namespace Aftr;
 
-KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*> &PlaneMap, int iteration);
+KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*> &MapPlanetoTree, std::map<WO*, BoundingBox> &MapPlanetoBB, int iteration);
+bool line_intersects_plane(WO* plane, WORay* ray, Vector& output);

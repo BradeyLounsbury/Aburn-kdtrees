@@ -44,15 +44,18 @@
 #include "KD_tree.h"
 #include "helpers.h"
 #include "WORay.h"
+#include "AftrUtilities.h"
+#include "WOQuad.h"
 
 using namespace Aftr;
 
 unsigned int cube_id;
-unsigned int pt_cloud_id;
+unsigned int plane_id;
 unsigned int griff_id;
 WORay* ray;
 WOPointCloud* pt_cloud;
-std::map<WO*, KD_Node*> PlaneMap;
+std::map<WO*, KD_Node*> MapPlanetoTree;
+std::map<WO*, BoundingBox> MapPlanetoBB;
 
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
@@ -226,7 +229,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_6)
    {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), PlaneMap, 6);
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapPlanetoBB, 6);
    }
 
    if (key.keysym.sym == SDLK_7)
@@ -234,12 +237,12 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        WO* wo = this->worldLst->getWOByID(griff_id);
        auto bb = wo->getModel()->getBoundingBox();
        auto verts = wo->getModel()->getCompositeVertexList();
-       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), PlaneMap, 6);
+       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapPlanetoBB, 6);
    }
 
    if (key.keysym.sym == SDLK_8)
    {
-       for (auto p : PlaneMap) {
+       for (auto p : MapPlanetoTree) {
            this->worldLst->eraseViaWOptr(p.first);
        }
    }
@@ -247,9 +250,22 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    if (key.keysym.sym == SDLK_9)
    {
        Vector output{ 0,0,0 };
-       for (auto p : PlaneMap) {
-          p.first->getNearestPointWhereLineIntersectsMe(ray->getRayTail(), ray->getRayHead(), output);
-          std::cout << output << std::endl;
+       for (auto p : MapPlanetoTree) {
+           if (line_intersects_plane(p.first, ray, output))
+           {
+               std::cout << "Intersects!" << std::endl;
+               std::cout << output << std::endl;
+           }
+       }
+   }
+
+   if (key.keysym.sym == SDLK_i)
+   {
+       Vector output;
+       if (line_intersects_plane(this->worldLst->getWOByID(plane_id), ray, output))
+       {
+           std::cout << "Intersects!" << std::endl;
+           std::cout << output << std::endl;
        }
    }
 }
@@ -287,7 +303,7 @@ void Aftr::GLViewKD_Trees::loadMap()
    ManagerOpenGLState::GL_CLIPPING_PLANE = 1000.0;
    ManagerOpenGLState::GL_NEAR_PLANE = 0.1f;
    ManagerOpenGLState::enableFrustumCulling = false;
-   Axes::isVisible = false;
+   Axes::isVisible = true;
    this->glRenderer->isUsingShadowMapping( false ); //set to TRUE to enable shadow mapping, must be using GL 3.2+
 
    this->cam->setPosition( 15,15,10 );
@@ -435,6 +451,7 @@ void Aftr::GLViewKD_Trees::loadMap()
    {
        WO* wo = WO::New();
        MGLIndexedGeometry* mgl = MGLIndexedGeometry::New(wo);
+       auto &bb = mgl->getBoundingBox();
        std::vector<Vector> lines;
        lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(1, 0, 0));
        lines.push_back(Vector(0, 0, 0)); lines.push_back(Vector(0, 1, 0));
@@ -447,10 +464,22 @@ void Aftr::GLViewKD_Trees::loadMap()
        IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
        geom->setLineWidthInPixels(1.5);
        mgl->setIndexedGeometry(geom);
+       bb = mgl->getBoundingBox();
+       //mgl->setBoundingBox(Vector());
        GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
        mgl->getSkin().setShader(shdr);
        wo->setModel(mgl);
-       wo->setLabel("IndexedGeometryPlane");
+       bb = wo->getModel()->getBoundingBox();
+       plane_id = wo->getID();
+       wo->setPosition(Vector(0, 15, 10));
+       bb = wo->getModel()->getBoundingBox();
+       //this->worldLst->push_back(wo);
+   }
+
+   // wo plane
+   {
+       WOQuad* wo = WOQuad::New(QuadOrientation::qoXY, 2, 2, Vector(0.0f,0.0f,1.0f), false, true, false);
+       auto &skins = wo->getModel()->getSkins();
        wo->setPosition(Vector(0, 15, 10));
        //this->worldLst->push_back(wo);
    }
@@ -484,7 +513,6 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud->setLabel("PointCloud");
        pt_cloud->getModel()->renderBBox = false;
        pt_cloud->setSizeOfEachPoint(0.4, 0.4);
-       pt_cloud_id = pt_cloud->getID();
        this->worldLst->push_back(pt_cloud);
    }
 
@@ -501,11 +529,8 @@ void Aftr::GLViewKD_Trees::loadMap()
 
    // wo ray
    {
-       WORay* ray = WORay::New(Vector(0, 0, 0), Vector(1, 0, 0));
+       ray = WORay::New(Vector(7, 1.5, 0), Vector(7, 1.5, 5));
        ray->setColor_Head_and_Tail(aftrColor4ub{ 255,255,0,255 }, aftrColor4ub{ 255,255,0,255 });
-       ray->setPosition(10, -2.5, 10);
-       ray->rotateAboutGlobalZ(90 * DEGtoRAD);
-       ray->getModel()->setScale(Vector(5, 5, 5));
        this->worldLst->push_back(ray);
    }
 
