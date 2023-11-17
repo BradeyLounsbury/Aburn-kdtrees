@@ -49,13 +49,13 @@
 
 using namespace Aftr;
 
+Vector head, tail;
 unsigned int cube_id;
 unsigned int plane_id;
 unsigned int griff_id;
 WORay* ray;
 WOPointCloud* pt_cloud;
 std::map<WO*, KD_Node*> MapPlanetoTree;
-std::map<WO*, BoundingBox> MapPlanetoBB;
 
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
@@ -125,6 +125,8 @@ void GLViewKD_Trees::updateWorld()
    if (move_backward) {
        this->cam->moveOppositeLookDirection();
    }
+
+   ray->setRayHeadAndTail(head, tail);
 }
 
 
@@ -229,7 +231,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_6)
    {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapPlanetoBB, 6);
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, 6);
    }
 
    if (key.keysym.sym == SDLK_7)
@@ -237,7 +239,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        WO* wo = this->worldLst->getWOByID(griff_id);
        auto bb = wo->getModel()->getBoundingBox();
        auto verts = wo->getModel()->getCompositeVertexList();
-       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapPlanetoBB, 6);
+       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, 6);
    }
 
    if (key.keysym.sym == SDLK_8)
@@ -256,16 +258,6 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
                std::cout << "Intersects!" << std::endl;
                std::cout << output << std::endl;
            }
-       }
-   }
-
-   if (key.keysym.sym == SDLK_i)
-   {
-       Vector output;
-       if (line_intersects_plane(this->worldLst->getWOByID(plane_id), ray, output))
-       {
-           std::cout << "Intersects!" << std::endl;
-           std::cout << output << std::endl;
        }
    }
 }
@@ -624,16 +616,25 @@ void Aftr::GLViewKD_Trees::loadMap()
    //Make a Dear Im Gui instance via the WOImGui in the engine... This calls
    //the default Dear ImGui demo that shows all the features... To create your own,
    //inherit from WOImGui and override WOImGui::drawImGui_for_this_frame(...) (among any others you need).
-   //WOImGui* gui = WOImGui::New( nullptr );
-   //gui->setLabel( "My Gui" );
-   //gui->subscribe_drawImGuiWidget(
-   //   [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
-   //   {
-   //      ImGui::ShowDemoWindow(); //Displays the default ImGui demo from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
-   //      WOImGui::draw_AftrImGui_Demo( gui ); //Displays a small Aftr Demo from C:/repos/aburn/engine/src/aftr/WOImGui.cpp
-   //      ImPlot::ShowDemoWindow(); //Displays the ImPlot demo using ImGui from C:/repos/aburn/engine/src/imgui_implot/implot_demo.cpp
-   //   } );
-   //this->worldLst->push_back( gui );
+   WOImGui* gui = WOImGui::New( nullptr );
+   gui->setLabel( "My Gui" );
+   gui->subscribe_drawImGuiWidget(
+      [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
+      {
+           ImGui::Begin("KD_Trees");
+
+           ImGui::SliderFloat("Head.x", &head.x, -5, 20);
+           ImGui::SliderFloat("Head.y", &head.y, -5, 20);
+           ImGui::SliderFloat("Head.z", &head.z, 0, 20);
+           ImGui::Separator();
+
+           ImGui::SliderFloat("Tail.x", &tail.x, -5, 20);
+           ImGui::SliderFloat("Tail.y", &tail.y, -5, 20);
+           ImGui::SliderFloat("Tail.z", &tail.z, 0, 20);
+
+           ImGui::End();
+      } );
+   this->worldLst->push_back( gui );
 
    //createKD_TreesWayPoints();
 }
