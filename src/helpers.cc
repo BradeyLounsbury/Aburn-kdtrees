@@ -1,12 +1,12 @@
 #include "helpers.h"
 
-KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*>& MapPlanetoTree, int iteration) {
+KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*>& MapPlanetoTree, std::map<KD_Node*, std::vector<Vector>>& MapNodetoVerts, int iteration) {
 	if (iteration == 0 || verts.empty()) {
 		return nullptr;
 	}
 
     WO* new_plane = WO::New();
-    KD_Node* new_node = init_node(verts, new_plane);
+    KD_Node* new_node = init_node(MapNodetoVerts, verts, new_plane);
 	if (iteration % 3 == 0) { // yz plane
         quickSort(verts, 0, verts.size() - 1, 0);
         auto& x_2 = verts[(verts.size() - 1) / 2].x;
@@ -45,8 +45,8 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
 	}
 	else if (iteration % 3 == 2) { // xz plane
         quickSort(verts, 0, verts.size() - 1, 1);
@@ -86,8 +86,8 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
     }
 	else { // xy plane
         quickSort(verts, 0, verts.size() - 1, 2);
@@ -127,8 +127,8 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
 	}
 
     return new_node;

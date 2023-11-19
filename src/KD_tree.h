@@ -6,10 +6,9 @@ struct KD_Node {
     KD_Node* left; 
     KD_Node* right;
     int height;
-    std::vector<Aftr::Vector> verts;
     Aftr::WO* plane;
 };
 
-KD_Node* init_node(std::vector<Aftr::Vector> verts, Aftr::WO* wo);
-void add_left(KD_Node* root, std::vector<Aftr::Vector> verts, Aftr::WO* wo);
-void add_right(KD_Node* root, std::vector<Aftr::Vector> verts, Aftr::WO* wo);
+KD_Node* init_node(std::map<KD_Node*, std::vector<Aftr::Vector>> &MapNodetoVerts, std::vector<Aftr::Vector> verts, Aftr::WO* wo);
+void add_left(KD_Node* root, std::map<KD_Node*, std::vector<Aftr::Vector>> &MapNodetoVerts, std::vector<Aftr::Vector> verts, Aftr::WO* wo);
+void add_right(KD_Node* root, std::map<KD_Node*, std::vector<Aftr::Vector>> &MapNodetoVerts, std::vector<Aftr::Vector> verts, Aftr::WO* wo);

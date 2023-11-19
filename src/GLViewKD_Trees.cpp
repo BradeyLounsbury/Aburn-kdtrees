@@ -56,6 +56,7 @@ unsigned int griff_id;
 WORay* ray;
 WOPointCloud* pt_cloud;
 std::map<WO*, KD_Node*> MapPlanetoTree;
+std::map<KD_Node*, std::vector<Vector>> MapNodetoVerts;
 
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
@@ -231,7 +232,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_6)
    {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, 6);
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapNodetoVerts, 6);
    }
 
    if (key.keysym.sym == SDLK_7)
@@ -239,7 +240,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        WO* wo = this->worldLst->getWOByID(griff_id);
        auto bb = wo->getModel()->getBoundingBox();
        auto verts = wo->getModel()->getCompositeVertexList();
-       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, 6);
+       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapNodetoVerts, 3);
    }
 
    if (key.keysym.sym == SDLK_8)
@@ -252,13 +253,23 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    if (key.keysym.sym == SDLK_9)
    {
        Vector output{ 0,0,0 };
+       std::set<Vector> possible_verts;
+       int count = 0;
        for (auto p : MapPlanetoTree) {
+           std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
            if (line_intersects_plane(p.first, ray, output))
            {
+               for (auto v : MapNodetoVerts.find(p.second)->second) {
+                   /*possible_verts.insert(v);*/
+                   count++;
+               }
                std::cout << "Intersects!" << std::endl;
                std::cout << output << std::endl;
            }
        }
+
+       std::cout << "Griff total vert count = " << this->worldLst->getWOByID(griff_id)->getModel()->getCompositeVertexList().size() << std::endl;
+       std::cout << "KD_Tree total possible vert count = " << count << std::endl;
    }
 }
 
