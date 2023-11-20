@@ -1,6 +1,6 @@
 #include "helpers.h"
 
-KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*>& MapPlanetoTree, std::map<KD_Node*, std::vector<Vector>>& MapNodetoVerts, int iteration) {
+KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector> verts, Vector min, Vector max, std::map<WO*, KD_Node*>& MapPlanetoTree, std::map<KD_Node*, std::vector<Vector>>& MapNodetoVerts, int iteration, bool isRoot) {
 	if (iteration == 0 || verts.empty()) {
 		return nullptr;
 	}
@@ -24,13 +24,17 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
         geom->setLineWidthInPixels(1.5);
         mgl->setIndexedGeometry(geom);
-        mgl->getBoundingBox().setBBoxExtrema(lines);
+
+        Vector lxlylz{ 0, max.y - min.y, max.z - min.z };
+        Vector center{ x_2, (min.y + max.y) / 2, (min.z + max.z) / 2 };
+        mgl->getBoundingBox().setlxlylz(lxlylz, center);
+
         GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
         mgl->getSkin().setShader(shdr);
         
         new_plane->setModel(mgl);
         new_plane->setPosition(pos);
-        glview->getWorldContainer()->push_back(new_plane);
+        if (!isRoot) glview->getWorldContainer()->push_back(new_plane);
 
         std::vector<Vector> v1, v2;
         v1.assign(verts.begin(), verts.begin() + ((verts.size() - 1) / 2));
@@ -42,11 +46,14 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         Vector v2_min = min; v2_min.x = x_2;
         Vector v2_max = max; 
 
-        MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+        if (!isRoot) {
+            MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+            MapNodetoVerts.insert(std::pair<KD_Node*, std::vector<Vector>>(new_node, verts));
+        }
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
 	}
 	else if (iteration % 3 == 2) { // xz plane
         quickSort(verts, 0, verts.size() - 1, 1);
@@ -65,13 +72,17 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
         geom->setLineWidthInPixels(1.5);
         mgl->setIndexedGeometry(geom);
-        mgl->getBoundingBox().setBBoxExtrema(lines);
+
+        Vector lxlylz{ max.x - min.x, 0, max.z - min.z };
+        Vector center{ (min.x + max.x) / 2, y_2, (min.z + max.z) / 2 };
+        mgl->getBoundingBox().setlxlylz(lxlylz, center);
+        
         GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
         mgl->getSkin().setShader(shdr);
         
         new_plane->setModel(mgl);
         new_plane->setPosition(pos);
-        glview->getWorldContainer()->push_back(new_plane);
+        if (!isRoot) glview->getWorldContainer()->push_back(new_plane);
 
         std::vector<Vector> v1, v2;
         v1.assign(verts.begin(), verts.begin() + ((verts.size() - 1) / 2));
@@ -83,11 +94,14 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         Vector v2_min = min; v2_min.y = y_2;
         Vector v2_max = max;
 
-        MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+        if (!isRoot) {
+            MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+            MapNodetoVerts.insert(std::pair<KD_Node*, std::vector<Vector>>(new_node, verts));
+        }
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
     }
 	else { // xy plane
         quickSort(verts, 0, verts.size() - 1, 2);
@@ -106,13 +120,17 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         IndexedGeometryLines* geom = IndexedGeometryLines::New(lines, colors);
         geom->setLineWidthInPixels(1.5);
         mgl->setIndexedGeometry(geom);
-        mgl->getBoundingBox().setBBoxExtrema(lines);
+
+        Vector lxlylz{ max.x - min.x, max.y - min.y, 0 };
+        Vector center{ (min.x + max.x) / 2, (min.y + max.y) / 2, z_2 };
+        mgl->getBoundingBox().setlxlylz(lxlylz, center);
+
         GLSLShaderDefaultIndexedGeometryLinesGL32* shdr = GLSLShaderDefaultIndexedGeometryLinesGL32::New();
         mgl->getSkin().setShader(shdr);
         
         new_plane->setModel(mgl);
         new_plane->setPosition(pos);
-        glview->getWorldContainer()->push_back(new_plane);
+        if (!isRoot) glview->getWorldContainer()->push_back(new_plane);
 
         std::vector<Vector> v1, v2;
         v1.assign(verts.begin(), verts.begin() + ((verts.size() - 1) / 2));
@@ -124,11 +142,14 @@ KD_Node* generate_KD_Tree(GLViewKD_Trees* glview, Vector pos, std::vector<Vector
         Vector v2_min = min; v2_min.z = z_2;
         Vector v2_max = max;
 
-        MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+        if (!isRoot) {
+            MapPlanetoTree.insert(std::pair<WO*, KD_Node*>(new_plane, new_node));
+            MapNodetoVerts.insert(std::pair<KD_Node*, std::vector<Vector>>(new_node, verts));
+        }
 
         iteration--;
-        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration);
-        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration);
+        new_node->left = generate_KD_Tree(glview, pos, v1, v1_min, v1_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
+        new_node->right = generate_KD_Tree(glview, pos, v2, v2_min, v2_max, MapPlanetoTree, MapNodetoVerts, iteration, false);
 	}
 
     return new_node;

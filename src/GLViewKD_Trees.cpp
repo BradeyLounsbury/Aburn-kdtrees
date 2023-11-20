@@ -232,7 +232,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_6)
    {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapNodetoVerts, 6);
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapNodetoVerts, 6, true);
    }
 
    if (key.keysym.sym == SDLK_7)
@@ -240,7 +240,7 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        WO* wo = this->worldLst->getWOByID(griff_id);
        auto bb = wo->getModel()->getBoundingBox();
        auto verts = wo->getModel()->getCompositeVertexList();
-       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapNodetoVerts, 3);
+       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapNodetoVerts, 3, true);
    }
 
    if (key.keysym.sym == SDLK_8)
@@ -253,23 +253,23 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
    if (key.keysym.sym == SDLK_9)
    {
        Vector output{ 0,0,0 };
-       std::set<Vector> possible_verts;
-       int count = 0;
+       std::set<Vector> possible_verts, og_verts;
+       for (auto v : this->worldLst->getWOByID(griff_id)->getModel()->getCompositeVertexList())
+           og_verts.insert(v);
        for (auto p : MapPlanetoTree) {
-           std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
+           //std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
            if (line_intersects_plane(p.first, ray, output))
            {
                for (auto v : MapNodetoVerts.find(p.second)->second) {
-                   /*possible_verts.insert(v);*/
-                   count++;
+                   possible_verts.insert(v);
                }
                std::cout << "Intersects!" << std::endl;
                std::cout << output << std::endl;
            }
        }
 
-       std::cout << "Griff total vert count = " << this->worldLst->getWOByID(griff_id)->getModel()->getCompositeVertexList().size() << std::endl;
-       std::cout << "KD_Tree total possible vert count = " << count << std::endl;
+       std::cout << "Griff total vert count = " << og_verts.size() << std::endl;
+       std::cout << "KD_Tree total possible vert count = " << possible_verts.size() << std::endl;
    }
 }
 
@@ -526,6 +526,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        griffWO->setPosition(10, 0, 6.5);
        griffWO->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
        griff_id = griffWO->getID();
+       griffWO->isVisible = false;
 
        this->worldLst->push_back(griffWO);
    }
