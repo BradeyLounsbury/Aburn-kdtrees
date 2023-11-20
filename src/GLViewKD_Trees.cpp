@@ -58,6 +58,9 @@ WOPointCloud* pt_cloud;
 std::map<WO*, KD_Node*> MapPlanetoTree;
 std::map<KD_Node*, std::vector<Vector>> MapNodetoVerts;
 
+bool gen_tree_for_pt, gen_tree_for_griff, clear_tree, test_griff, test_pt, gen_ray_for_pt, gen_ray_for_griff;
+int iterations = 0;
+
 GLViewKD_Trees* GLViewKD_Trees::New( const std::vector< std::string >& args )
 {
    GLViewKD_Trees* glv = new GLViewKD_Trees( args );
@@ -128,6 +131,100 @@ void GLViewKD_Trees::updateWorld()
    }
 
    ray->setRayHeadAndTail(head, tail);
+
+   if (gen_tree_for_pt) {
+       gen_tree_for_pt = false;
+
+       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapNodetoVerts, iterations, true);
+   }
+
+   if (gen_tree_for_griff) {
+       gen_tree_for_griff = false;
+
+       WO* wo = this->worldLst->getWOByID(griff_id);
+       auto bb = wo->getModel()->getBoundingBox();
+       auto verts = wo->getModel()->getCompositeVertexList();
+       generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapNodetoVerts, iterations, true);
+   }
+
+   if (clear_tree) {
+       clear_tree = false;
+
+       for (auto p : MapPlanetoTree) {
+           this->worldLst->eraseViaWOptr(p.first);
+       }
+       MapPlanetoTree.clear();
+       MapNodetoVerts.clear();
+   }
+
+   if (test_griff) {
+       test_griff = false;
+
+       Vector output{ 0,0,0 };
+       std::set<Vector> possible_verts, og_verts;
+       for (auto v : this->worldLst->getWOByID(griff_id)->getModel()->getCompositeVertexList())
+           og_verts.insert(v);
+       for (auto p : MapPlanetoTree) {
+           //std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
+           if (line_intersects_plane(p.first, ray, output))
+           {
+               for (auto v : MapNodetoVerts.find(p.second)->second) {
+                   possible_verts.insert(v);
+               }
+               std::cout << "Intersects!" << std::endl;
+               std::cout << output << std::endl;
+           }
+       }
+
+       std::cout << "Griff total vert count = " << og_verts.size() << std::endl;
+       std::cout << "KD_Tree total possible vert count = " << possible_verts.size() << std::endl;
+   }
+
+   if (test_pt) {
+       test_pt = false;
+
+       Vector output{ 0,0,0 };
+       std::set<Vector> possible_verts, og_verts;
+       for (auto v : pt_cloud->getPoints())
+           og_verts.insert(v);
+       for (auto p : MapPlanetoTree) {
+           //std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
+           if (line_intersects_plane(p.first, ray, output))
+           {
+               for (auto v : MapNodetoVerts.find(p.second)->second) {
+                   possible_verts.insert(v);
+               }
+               std::cout << "Intersects!" << std::endl;
+               std::cout << output << std::endl;
+           }
+       }
+
+       std::cout << "Pt Cloud total vert count = " << og_verts.size() << std::endl;
+       std::cout << "KD_Tree total possible vert count = " << possible_verts.size() << std::endl;
+   }
+
+   if (gen_ray_for_griff) {
+       gen_ray_for_griff = false;
+
+       WO* wo = this->worldLst->getWOByID(griff_id);
+       auto bb = wo->getModel()->getBoundingBox();
+
+       for (int i = 0; i < 3; i++) {
+           head[i] = ManagerRandomNumber::getRandomFloat(bb.getMin()[i] - 1 + wo->getPosition()[i], bb.getMax()[i] + 1 + wo->getPosition()[i]);
+           tail[i] = ManagerRandomNumber::getRandomFloat(bb.getMin()[i] - 1 + wo->getPosition()[i], bb.getMax()[i] + 1 + wo->getPosition()[i]);
+       }
+   }
+
+   if (gen_ray_for_pt) {
+       gen_ray_for_pt = false;
+
+       auto bb = pt_cloud->getModel()->getBoundingBox();
+
+       for (int i = 0; i < 3; i++) {
+           head[i] = ManagerRandomNumber::getRandomFloat(bb.getMin()[i] - 1 + pt_cloud->getPosition()[i], bb.getMax()[i] + 1 + pt_cloud->getPosition()[i]);
+           tail[i] = ManagerRandomNumber::getRandomFloat(bb.getMin()[i] - 1 + pt_cloud->getPosition()[i], bb.getMax()[i] + 1 + pt_cloud->getPosition()[i]);
+       }
+   }
 }
 
 
@@ -229,48 +326,6 @@ void GLViewKD_Trees::onKeyDown( const SDL_KeyboardEvent& key )
        pt_cloud->setPoints(v);
        pt_cloud->setColors(c);
    }
-
-   if (key.keysym.sym == SDLK_6)
-   {
-       generate_KD_Tree(this, pt_cloud->getPosition(), pt_cloud->getPoints(), pt_cloud->getModel()->getBoundingBox().getMin(), pt_cloud->getModel()->getBoundingBox().getMax(), MapPlanetoTree, MapNodetoVerts, 6, true);
-   }
-
-   if (key.keysym.sym == SDLK_7)
-   {
-       WO* wo = this->worldLst->getWOByID(griff_id);
-       auto bb = wo->getModel()->getBoundingBox();
-       auto verts = wo->getModel()->getCompositeVertexList();
-       KD_Node* root = generate_KD_Tree(this, wo->getPosition(), wo->getModel()->getCompositeVertexList(), bb.getMin(), bb.getMax(), MapPlanetoTree, MapNodetoVerts, 3, true);
-   }
-
-   if (key.keysym.sym == SDLK_8)
-   {
-       for (auto p : MapPlanetoTree) {
-           this->worldLst->eraseViaWOptr(p.first);
-       }
-   }
-
-   if (key.keysym.sym == SDLK_9)
-   {
-       Vector output{ 0,0,0 };
-       std::set<Vector> possible_verts, og_verts;
-       for (auto v : this->worldLst->getWOByID(griff_id)->getModel()->getCompositeVertexList())
-           og_verts.insert(v);
-       for (auto p : MapPlanetoTree) {
-           //std::cout << MapNodetoVerts.find(p.second)->second.size() << std::endl;
-           if (line_intersects_plane(p.first, ray, output))
-           {
-               for (auto v : MapNodetoVerts.find(p.second)->second) {
-                   possible_verts.insert(v);
-               }
-               std::cout << "Intersects!" << std::endl;
-               std::cout << output << std::endl;
-           }
-       }
-
-       std::cout << "Griff total vert count = " << og_verts.size() << std::endl;
-       std::cout << "KD_Tree total possible vert count = " << possible_verts.size() << std::endl;
-   }
 }
 
 
@@ -306,7 +361,7 @@ void Aftr::GLViewKD_Trees::loadMap()
    ManagerOpenGLState::GL_CLIPPING_PLANE = 1000.0;
    ManagerOpenGLState::GL_NEAR_PLANE = 0.1f;
    ManagerOpenGLState::enableFrustumCulling = false;
-   Axes::isVisible = true;
+   Axes::isVisible = false;
    this->glRenderer->isUsingShadowMapping( false ); //set to TRUE to enable shadow mapping, must be using GL 3.2+
 
    this->cam->setPosition( 15,15,10 );
@@ -515,7 +570,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        pt_cloud->setPosition(0, 0, 5);
        pt_cloud->setLabel("PointCloud");
        pt_cloud->getModel()->renderBBox = false;
-       pt_cloud->setSizeOfEachPoint(0.4, 0.4);
+       pt_cloud->setSizeOfEachPoint(0.3, 0.3);
        this->worldLst->push_back(pt_cloud);
    }
 
@@ -526,7 +581,7 @@ void Aftr::GLViewKD_Trees::loadMap()
        griffWO->setPosition(10, 0, 6.5);
        griffWO->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
        griff_id = griffWO->getID();
-       griffWO->isVisible = false;
+       //griffWO->isVisible = false;
 
        this->worldLst->push_back(griffWO);
    }
@@ -635,6 +690,22 @@ void Aftr::GLViewKD_Trees::loadMap()
       {
            ImGui::Begin("KD_Trees");
 
+           ImGui::Text("KD-Tree Properties");
+           ImGui::SliderInt("Iterations", &iterations, 1, 20);
+           if (ImGui::Button("Tree for Griff")) {
+               gen_tree_for_griff = true;
+           }
+           ImGui::SameLine();
+           if (ImGui::Button("Tree for Pt Cloud")) {
+               gen_tree_for_pt = true;
+           }
+           ImGui::SameLine();
+           if (ImGui::Button("Clear Trees")) {
+               clear_tree = true;
+           }
+           ImGui::Separator();
+
+           ImGui::Text("Ray Properties");
            ImGui::SliderFloat("Head.x", &head.x, -5, 20);
            ImGui::SliderFloat("Head.y", &head.y, -5, 20);
            ImGui::SliderFloat("Head.z", &head.z, 0, 20);
@@ -643,6 +714,22 @@ void Aftr::GLViewKD_Trees::loadMap()
            ImGui::SliderFloat("Tail.x", &tail.x, -5, 20);
            ImGui::SliderFloat("Tail.y", &tail.y, -5, 20);
            ImGui::SliderFloat("Tail.z", &tail.z, 0, 20);
+           ImGui::Separator();
+
+           if (ImGui::Button("Gen Ray for Griff")) {
+               gen_ray_for_griff = true;
+           }
+           ImGui::SameLine();
+           if (ImGui::Button("Gen Ray for Pt Cloud")) {
+               gen_ray_for_pt = true;
+           }
+           if (ImGui::Button("Test Ray for Griff")) {
+               test_griff = true;
+           }
+           ImGui::SameLine();
+           if (ImGui::Button("Test Ray for Pt Cloud")) {
+               test_pt = true;
+           }
 
            ImGui::End();
       } );
